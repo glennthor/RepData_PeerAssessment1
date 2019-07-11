@@ -4,22 +4,160 @@ output:
   html_document:
     keep_md: true
 ---
-
+Load libraries..
+```{r}
+library(dplyr)
+library(ggplot2)
+```
 
 ## Loading and preprocessing the data
+First, we read the CSV into a dataframe
+```{r}
+df <- read.csv("activity.csv")
+df$date <- as.POSIXct(df$date, format="%Y-%m-%d")
+```
 
+Check out the dimensions..
+```{r}
+dim(df)
+```
 
+Preview the data..
+```{r}
+head(df,10)
+```
 
 ## What is mean total number of steps taken per day?
+Calculate total steps / day
+```{r}
+stepsByDay <- df %>%
+      group_by(date) %>%
+      summarise(total_steps=sum(steps, na.rm=TRUE))
 
+head(stepsByDay)
+```
+Plot on a histogram..
+```{r}
+plot(stepsByDay$date, stepsByDay$total_steps, type="h", 
+     main="Total Steps per Day", xlab = "Dates", ylab = "Total Steps")
+```
 
+Calculate and report the mean and median of the total number of steps taken per day
+```{r}
+df %>%
+      group_by(date) %>%
+      summarise(total_steps = sum(steps, na.rm=TRUE), 
+                mean = mean(steps, na.rm=TRUE), 
+                median = median(steps, na.rm=TRUE))
+```
 
 ## What is the average daily activity pattern?
 
+Grouping the data by Internal, and calculate the mean.
+```{r}
+avgDaily <- df %>%
+      group_by(interval) %>%
+      summarise(avg_steps = mean(steps, na.rm=TRUE))
+
+head(avgDaily, 10)
+```
+
+Plot the results..
+```{r}
+plot(avgDaily$interval, avgDaily$avg_steps,  type = "l", 
+     main = "Average Daily Activity Pattern", xlab = "5 min - Intervals", ylab="Average Steps")
+```
+
+Finding the 5-minute interval, on average across all the days in the dataset, that contains the maximum number of steps
+```{r}
+avgDaily[which.max(avgDaily$avg_steps),]
+```
 
 
 ## Imputing missing values
 
+Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+```{r}
+sum(is.na(df$steps))
+```
+
+We use a function to fill the missing values in the dataset, with the average steps from the "Avg steps / Interval" data earlier.
+```{r}
+
+getAvgSteps <- function(interval){
+  val <- avgDaily[avgDaily$interval == interval, 2]
+  val
+} 
+
+getAvgSteps(835)
+
+```
+
+Create a new dataset that is equal to the original dataset but with the missing data filled in.
+Run a for-loop and check which row has steps = NA.
+Then update the value using the getAvgSteps function.
+```{r}
+df_clean <- df
+for (i in 1:nrow(df_clean)){
+  if (is.na(df_clean[i,1])){
+    df_clean[i,1] <- getAvgSteps(df_clean[i,3])
+  }
+}
+head(df_clean, 15)
+```
 
 
+Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. 
+
+Calculate total steps, mean and median using the clean data.
+```{r}
+stepsByDay_clean <- df_clean %>%
+      group_by(date) %>%
+      summarise(total_steps = sum(steps),
+                mean = mean(steps), 
+                median = median(steps))
+
+head(stepsByDay_clean)
+```
+Plot on a histogram..
+```{r}
+plot(stepsByDay_clean$date, stepsByDay_clean$total_steps, type="h", 
+     main="Total Steps per Day (no missing values)", xlab = "Dates", ylab = "Total Steps")
+```
+
+
+Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+```{r}
+# Yes, it differs from earlier. 
+# Inputing the missing data avoids having NaN showing up on the calculated columns .e.g mean.
+```
+  
 ## Are there differences in activity patterns between weekdays and weekends?
+
+Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+```{r}
+df_clean <- df_clean %>% 
+  mutate(day_type = ifelse(weekdays(date) %in% c("Saturday", "Sunday"), "weekend", "weekday"))
+
+head(df_clean, 10)
+```
+
+Time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+
+Grouping the data by Interval and Weekday/Weekend, then calculate the mean.
+```{r}
+df_clean <- df_clean %>%
+      group_by(interval, day_type) %>%
+      summarise(avg_steps = mean(steps))
+
+head(df_clean)
+```
+
+
+Plot using Lattice..
+```{r}
+library(lattice) 
+attach(df_clean)
+xyplot(avg_steps~interval|day_type, layout=c(1,2), xlab = "Internal", ylab = "Average Steps", type="l")
+detach(df_clean)
+```
