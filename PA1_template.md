@@ -111,28 +111,19 @@ plot(stepsByDay$date, stepsByDay$total_steps, type="h",
 Calculate and report the mean and median of the total number of steps taken per day
 
 ```r
-df %>%
-      group_by(date) %>%
-      summarise(total_steps = sum(steps, na.rm=TRUE), 
-                mean = mean(steps, na.rm=TRUE), 
-                median = median(steps, na.rm=TRUE))
+mean(stepsByDay$total_steps)
 ```
 
 ```
-## # A tibble: 61 x 4
-##    date                total_steps    mean median
-##    <dttm>                    <int>   <dbl>  <dbl>
-##  1 2012-10-01 00:00:00           0 NaN         NA
-##  2 2012-10-02 00:00:00         126   0.438      0
-##  3 2012-10-03 00:00:00       11352  39.4        0
-##  4 2012-10-04 00:00:00       12116  42.1        0
-##  5 2012-10-05 00:00:00       13294  46.2        0
-##  6 2012-10-06 00:00:00       15420  53.5        0
-##  7 2012-10-07 00:00:00       11015  38.2        0
-##  8 2012-10-08 00:00:00           0 NaN         NA
-##  9 2012-10-09 00:00:00       12811  44.5        0
-## 10 2012-10-10 00:00:00        9900  34.4        0
-## # … with 51 more rows
+## [1] 9354.23
+```
+
+```r
+median(stepsByDay$total_steps)
+```
+
+```
+## [1] 10395
 ```
 
 ## What is the average daily activity pattern?

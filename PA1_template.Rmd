@@ -44,11 +44,8 @@ plot(stepsByDay$date, stepsByDay$total_steps, type="h",
 
 Calculate and report the mean and median of the total number of steps taken per day
 ```{r}
-df %>%
-      group_by(date) %>%
-      summarise(total_steps = sum(steps, na.rm=TRUE), 
-                mean = mean(steps, na.rm=TRUE), 
-                median = median(steps, na.rm=TRUE))
+mean(stepsByDay$total_steps)
+median(stepsByDay$total_steps)
 ```
 
 ## What is the average daily activity pattern?
